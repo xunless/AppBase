@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>拓扑图</title>
+	<!-- <script type="text/javascript" src="https://js.cdn.aliyun.dcloud.net.cn/dev/uni-app/uni.webview.1.5.2.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.12/vue.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/ant-design-vue/1.7.2/antd.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/6.3.1/d3.min.js"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ant-design-vue/1.7.2/antd.min.css"/> -->
+	<script src="./js/uni.webview.1.5.2.js"></script>
+	<script src="./js/vue.min.js"></script>
+	<script src="./js/antd.min.js"></script>
+	<script src="./js/d3.min.js"></script>
+	<script src="./js/vis.min.js"></script>
+	<link rel="stylesheet" href="./css/antd.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    html,body {
+      background-color: #33365D;
+    }
+    .loading{
+			width: 100%;
+			height: 100vh;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+		.empty{
+			color: white;
+			font-size: 16px;
+			text-align: center;
+			margin-top: 100px;
+		}
+		#mynetwork {
+			width: 100%;
+			height: 100vh;
+		}
+  </style>
+</head>
+<body>
+  <div id="app">
+		<div v-if="loading" class="loading">
+			<a-spin v-if="loading" tip="加载中..." />
+		</div>
+		<div v-else id="mynetwork"></div>
+		<div class="empty" v-if="isEmpty">
+			请切换拓扑图或者新增拓扑图
+		</div>
+	</div>
+</body>
+
+
+<script>
+	new Vue({
+		el: '#app',
+		data() {
+			return {
+				loading: true,
+				isEmpty: false
+			}
+		},
+		mounted() {
+			const url = 'http://47.116.26.245:7071'
+			const svgW = window.innerWidth*window.devicePixelRatio;
+			const svgH = window.innerHeight*window.devicePixelRatio;
+			// 获取值
+			function getQueryString(name) {
+			  var reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)', 'i')
+			  var r = window.location.search.substr(1).match(reg)
+			  if (r != null) return unescape(r[2])
+			  return null
+			}
+			const id = getQueryString('id')
+			const token = getQueryString('token')
+			const show = getQueryString('switch')
+			// document.querySelector('.map').innerHTML = `${id} + ${token} + ${svgW} + ${svgH}`
+			d3.select('#app').append('svg')
+				.attr('id', 'mainsvg')
+				.attr('class', 'svgs')
+				// .attr('width', svgW/2)
+				// .attr('height', svgH/2)
+				.attr('viewBox', [0,0, svgW, svgH])
+				.call(d3.zoom().scaleExtent([0, 10]).on('zoom', function(event) {
+					d3.select('#g').attr('transform', event.transform)
+				}))
+				.append('g')
+				.attr('id', 'g')
+			let root,color
+			const fill = d => {
+				if (d.depth === 0)
+					return color(d.data.name)
+				while (d.depth > 1)
+					d = d.parent;
+				return color(d.data.name);
+			}
+			
+			const render = function(data) {
+				color = d3.scaleOrdinal()
+					.domain(root.descendants().filter(d => d.depth <= 1).map(d => d.data.name))
+					.range(d3.schemeCategory10);
+			
+				const g = d3.select('#g')
+				g.selectAll('path')
+					.data(root.links())
+					.join("path")
+					.attr("fill", "none")
+					.attr("stroke", "white")
+					.attr("stroke-width", 1.5)
+					.attr('id', (d,i) => {
+						return `svg${i}`
+					})
+					.attr("d", d3.linkHorizontal().x(d => d.x).y(d => d.y));
+			
+			 g.selectAll('circle').data(root.descendants()).join('circle')
+					// optionally, we can use stroke-linejoin to beautify the path connection; 
+					//.attr("stroke-linejoin", "round")
+					.attr("stroke-width", 3)
+					.attr("fill", fill)
+					.attr('cx', d => d.x)
+					.attr('cy', d => d.y)
+					.attr("r", 6);
+			
+				g.selectAll('text').data(root.descendants()).join('text')
+					.attr("text-anchor", 'end')
+					// note that if d is a child, d.children is undefined which is actually false! 
+					.attr('x', d => d.x-10)
+					.attr('y', d => d.y+6)
+					.attr('fill', 'white')
+					.attr('style', 'font-size: 22px')
+					.text((d, i) => d.data.name);
+			
+				g.selectAll('.dataArr').data(root.descendants()).join('g').attr('class', 'dataArr')
+					.append('text')
+					.attr('class', 'dataArrText')
+					.attr('text-anchor', 'middle')
+					.attr('x', d => d.parent?d.y - d.parent.y:0)
+					.attr('fill', 'white')
+					.attr('style', 'font-size: 10px')
+					.append('textPath')
+					.attr('xlink:href', (d,i) => {
+						return `#svg${i-1}`
+					})
+					.attr('startOffset', '-10')
+					.append('tspan')
+					.attr('x', d => d.parent?d.y - d.parent.y:0)
+					.attr('dy', '-10')
+					.text(d => d.data.siteName)
+				g.selectAll('textPath').data(root.descendants()).append('tspan')
+					.attr('dy', '20')
+					.attr('x', d => d.parent?d.y - d.parent.y:0)
+					.text((d, i) => i>0?`设备编号：${d.data.deviceCode}`:'')
+				g.selectAll('textPath').data(root.descendants()).append('tspan')
+					.attr('dy', '18')
+					.attr('x', d => {
+						console.log(d);
+						return d.parent?d.y - d.parent.y:0
+					})
+					.text((d, i) => i>0?`漏电流：${d.data.ld}mA`:'')
+				if(show == 'true') {
+					g.selectAll('textPath').data(root.descendants()).append('tspan')
+						.attr('dy', '18')
+						.attr('x', d => {
+							console.log(d);
+							return d.parent?d.y - d.parent.y:0
+						})
+						.attr('fill', 'red')
+						.text((d,i) => i>0?d.data.police:'')
+				}
+			}
+			d3.json(`${url}/api/company/topology/moren?id=${id}`, {
+				headers: new Headers({
+					'Authorization': token
+				})
+			}).then(res => {
+				console.log(res);
+				
+				if(res.code === 0) {
+					uni.postMessage({
+						data: {
+							id: res.data.id,
+							name: res.data.name,
+							status: res.data.status,
+							token: true
+						}
+					});
+					this.loading = false
+					if(res.data.adminFatherVo) {
+						root = d3.hierarchy(res.data.adminFatherVo)
+						root = d3.tree().size([svgW, svgH])(root)
+						console.log(root.links());
+						render(root)
+					} else {
+						this.isEmpty = true
+					}
+					
+				} else if(res.code === 5) {
+					this.loading = false
+					this.isEmpty = true
+					uni.postMessage({
+						data: {
+							token: false
+						}
+					})
+					// alert(res.msg)
+				}
+			})
+		}
+	})
+	
+</script>
+</html>

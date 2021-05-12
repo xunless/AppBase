@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>拓扑图</title>
+	<!-- <script type="text/javascript" src="https://js.cdn.aliyun.dcloud.net.cn/dev/uni-app/uni.webview.1.5.2.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.12/vue.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/ant-design-vue/1.7.2/antd.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/6.3.1/d3.min.js"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ant-design-vue/1.7.2/antd.min.css"/> -->
+	<script src="./js/uni.webview.1.5.2.js"></script>
+	<script src="./js/vis.min.js"></script>
+	<script src="./js/vue.min.js"></script>
+	<script src="./js/antd.min.js"></script>
+	<script src="./js/d3.min.js"></script>
+	<link rel="stylesheet" href="./css/antd.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    html,body {
+      background-color: #33365D;
+    }
+    .loading{
+			width: 100%;
+			height: 100vh;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+		.empty{
+			color: white;
+			font-size: 16px;
+			text-align: center;
+			margin-top: 100px;
+		}
+		#mynetwork {
+			width: 100%;
+			height: 100vh;
+		}
+  </style>
+</head>
+<body>
+  <div id="app">
+		<div v-show="loading" class="loading">
+			<a-spin v-show="loading" tip="加载中..." />
+		</div>
+		<div v-show="!loading && !isEmpty" ref="mynetwork" id="mynetwork"></div>
+		<div class="empty" v-show="isEmpty">
+			请切换拓扑图或者新增拓扑图
+		</div>
+	</div>
+</body>
+
+<script>
+	new Vue({
+		el: '#app',
+		data() {
+			return {
+				loading: true,
+				isEmpty: false,
+				network: null
+			}
+		},
+		mounted() {
+			var that = this
+			const url = 'http://47.116.26.245:7071'
+			// const url = 'http://192.168.1.120:7071'
+			const svgW = window.innerWidth*window.devicePixelRatio;
+			const svgH = window.innerHeight*window.devicePixelRatio;
+			// 获取值
+			function getQueryString(name) {
+			  var reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)', 'i')
+			  var r = window.location.search.substr(1).match(reg)
+			  if (r != null) return unescape(r[2])
+			  return null
+			}
+			const id = getQueryString('id')
+			const token = getQueryString('token')
+			let show = getQueryString('switch')
+			show = Boolean(show)
+			let root
+			const render = (renderData) => {
+				const arr = renderData.descendants().map((item, index) => {
+				  return {
+				    x: item.x,
+				    y: item.y,
+				    label: item.data.name,
+				    id: index === 0 ? item.data.sonId : item.data.id,
+				    siteName: item.data.name ? item.data.name : '',
+				    police: item.data.police ? item.data.police : '',
+				    ld: item.data.ld ? item.data.ld : '',
+				  }
+				})
+				console.log(arr);
+				const edges1 = renderData.links().map((item, index) => {
+				  console.log(item);
+				  return {
+				    from: item.source.data.id ? item.source.data.id : item.source.data.sonId,
+				    to: item.target.data.id,
+				    label: `${item.target.data.name}\n设备编号：${item.target.data.deviceCode}\n漏电流：${item.target.data.ld}\n${show ? item.target.data.police : ''}`,
+				    font: {
+				      color: item.target.data.police !== '未报警' ? 'red' : ''
+				    }
+				  }
+				})
+				console.log(edges1);
+				var container = that.$refs.mynetwork
+				var data = {
+				  nodes: arr,
+				  edges: edges1,
+				};
+				var options = {
+				  edges: {
+				    font: {
+				      size: 12,
+				    },
+				    widthConstraint: {
+				      maximum: 200,
+				    },
+				  },
+				  nodes: {
+				    shape: "box",
+				    margin: 10,
+				    widthConstraint: {
+				      maximum: 200,
+				    },
+				    color: '#1C1E3E',
+				    font: {
+				      color: 'white',
+				      size: 26
+				    }
+				  },
+				  physics: {
+				    enabled: false,
+				  },
+				};
+				that.$nextTick(() => {
+					that.network = new vis.Network(container, data, options);
+				})
+			}
+			    
+			d3.json(`${url}/api/company/topology/moren?id=${id}`, {
+				headers: new Headers({
+					'Authorization': token
+				})
+			}).then(res => {
+				console.log(res);
+				if(res.code === 0) {
+					uni.postMessage({
+						data: {
+							id: res.data.id,
+							name: res.data.name,
+							status: res.data.status,
+							token: true
+						}
+					});
+					this.loading = false
+					if(res.data.adminFatherVo.name) {
+						root = d3.hierarchy(res.data.adminFatherVo)
+						root = d3.tree().nodeSize([150, 250]).separation((a, b) => {
+						  return 2
+						})(root)
+						console.log(root.links());
+						render(root)
+					} else {
+						this.isEmpty = true
+					}
+					
+				} else if(res.code === 5) {
+					this.loading = false
+					this.isEmpty = true
+					uni.postMessage({
+						data: {
+							token: false
+						}
+					})
+					// alert(res.msg)
+				}
+			})
+		}
+	})
+	
+</script>
+</html>

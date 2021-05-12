@@ -1,0 +1,160 @@
+page,
+view,
+text,
+image,
+scroll-view,
+swiper,
+swiper-item {
+	/* #ifndef APP-NVUE */
+	box-sizing: border-box;
+	/* #endif */
+}
+
+// 基础颜色
+$c-common-color-0E: #0e0e0e;
+$c-common-color-12: #121212;
+$c-common-color-1F2622: #1f2622;
+$c-common-color-17182D: #17182D;
+$c-common-color-1C: #1c1d20;
+$c-common-color-19: #191B1E;
+$c-common-color-27: #272727;
+$c-common-color-2D2B2B: #2D2B2B;
+$c-common-color-333: #333;
+$c-common-color-34: #346BF9;
+$c-common-color-346CFA: #346CFA;
+$c-common-color-5e: #5e5e5e;
+$c-common-color-5e: #5E5F61;
+$c-common-color-6a6b78: #6a6b78;
+$c-common-color-666: #666;
+$c-common-color-8B8E8D: #8b8e8d;
+$c-common-color-9F: #9F9F9F;
+$c-common-color-9e: #9E9FA0;
+$c-common-color-999: #999;
+$c-common-color-9F: #9f9f9f;
+$c-common-color-B4: #b4b4b4;
+$c-common-color-BF: #bfbfbf;
+$c-common-color-BDC4CE: #bdc4ce;
+$c-common-color-BF: #bfbfbf;
+$c-common-color-2B: #2b2e31;
+$c-common-color-C2: #c2c2c2;
+$c-common-color-ccc: #ccc;
+$c-common-color-CB: #cbcbcb;
+$c-common-color-D8: rgba(216, 216, 216, 0.2);
+$c-common-color-ddd: #DDDDDD;
+$c-common-color-DE: #dedede;
+$c-common-color-E2: #e2e2e2;
+$c-common-color-EA: #EAEAEA;
+$c-common-color-E8: #E8E8E8;
+$c-common-color-eee: #E4E4EE;
+$c-common-color-eee: #eeeeee;
+$c-common-color-F2: #F2F2F2;
+$c-common-color-FA: #FAFAFB;
+$c-common-color-F5: #F5F4F4;
+$c-common-color-F5F5F5: #F5F5F5;
+$c-common-color-F6: #f6f6f6;
+$c-common-color-F7: #f7f7f7;
+$c-common-color-F8: #F8F8F8;
+$c-common-color-F9: #f9f9f9;
+$c-common-color-fff: #ffffff;
+
+// 基础字体大小
+$c-font-21: 21rpx;
+$c-font-22: 22rpx;
+$c-font-24: 24rpx;
+$c-font-25: 25rpx;
+$c-font-26: 26rpx;
+$c-font-28: 28rpx;
+$c-font-29: 29rpx;
+$c-font-30: 30rpx;
+$c-font-32: 32rpx;
+$c-font-34: 34rpx;
+$c-font-36: 36rpx;
+$c-font-38: 38rpx;
+$c-font-40: 40rpx;
+$c-font-42: 42rpx;
+$c-font-45: 45rpx;
+$c-font-46: 46rpx;
+$c-font-48: 48rpx;
+$c-font-52: 52rpx;
+$c-font-64: 64rpx;
+
+// btn按钮
+$c-btn-width-220: 220rpx;
+$c-btn-width-248: 248rpx;
+$c-btn-width-330: 330rpx;
+$c-btn-width-310: 310rpx;
+$c-btn-width-590: 590rpx;
+$c-btn-width-600: 600rpx;
+$c-btn-width-626: 626rpx;
+$c-btn-width-628: 628rpx;
+$c-btn-width-638: 638rpx;
+$c-btn-width-650: 650rpx;
+$c-btn-width-685: 685rpx;
+
+$c-btn-height-80: 80rpx;
+$c-btn-height-89: 89rpx;
+$c-btn-height-90: 90rpx;
+$c-btn-height-92: 92rpx;
+$c-btn-height-100: 100rpx;
+$c-btn-height-112: 112rpx;
+
+$c-btn-radius-45: 45rpx;
+$c-btn-radius-46: 46rpx;
+$c-btn-radius-49: 49rpx;
+$c-btn-radius-50: 50rpx;
+$c-btn-radius-80: 80rpx;
+$c-btn-radius-112: 112rpx;
+
+//常用flex
+@mixin space-between {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+@mixin space-around {
+	display: flex;
+	justify-content: space-around;
+	align-items: center;
+}
+
+@mixin center {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+@mixin center-upper {
+	display: flex;
+	align-items: center;
+}
+
+@mixin vertical {
+	display: flex;
+	align-items: center;
+	flex-flow: column;
+	justify-content: space-between;
+}
+
+//常用f超出隐藏
+@mixin ellipsis_one {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	word-break: break-all;
+}
+
+// 常用按钮样式
+.btn {
+	width: 100%;
+	height: 98rpx;
+	text-align: center;
+	font-family: PingFang SC;
+	font-weight: 400;
+	border-radius: $c-btn-radius-49;
+	color: $c-common-color-fff;
+	line-height: 98rpx;
+	background-color: $c-common-color-333;
+	font-size: $c-font-32;
+	box-sizing: border-box;
+}
